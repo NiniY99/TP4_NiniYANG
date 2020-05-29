@@ -81,16 +81,24 @@ public class Controller {
    			clone.setOnAction(new EventHandler<ActionEvent>() {
    				@Override
    				public void handle(ActionEvent e) {
+   					Color color = (Color) selectPar.getFill();
+   					gc.setFill(color);
    					if(selectPar instanceof Rectangle) {
    						double x = ((Rectangle)selectPar).getX();
    						double y = ((Rectangle)selectPar).getY();
    						double w = ((Rectangle)selectPar).getWidth();
    						double h = ((Rectangle)selectPar).getHeight();
    						Rectangle r = new Rectangle(x, y, w, h);
-   						Color color = (Color) selectPar.getFill();
    						r.getTransforms().add(new Translate(10, 10));
    						gc.fillRect(x, y, w, h);
-   						gc.setFill(color);
+   					}else if(selectPar instanceof Line) {
+   						double x1 = ((Line)selectPar).getStartX();
+   						double y1 = ((Line)selectPar).getStartY();
+   						double x2 = ((Line)selectPar).getEndX();
+   						double y2 = ((Line)selectPar).getEndY();
+   						Line l = new Line(x1, y1, x2, y2);
+   						l.getTransforms().add(new Translate(10, 10));
+   						gc.strokeLine(x1, y1, x2, y2);
    					}
    				}
    			});
