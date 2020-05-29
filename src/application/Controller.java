@@ -1,5 +1,6 @@
 package application;
 
+import java.util.ArrayList;
 
 import javafx.beans.value.*;
 import javafx.event.ActionEvent;
@@ -42,8 +43,13 @@ public class Controller {
 	private ToggleGroup groupe1;
 	private Rectangle rect;
 	private Line ligne;
+	private Dessin d;
 	private boolean estSelectionne = false;
+	private Shape selectPar;
 	
+	public Controller() {
+		d = new Dessin();
+	}
 	@FXML
 	public void initialize() {
 		GraphicsContext gc = canvas.getGraphicsContext2D();
@@ -58,15 +64,38 @@ public class Controller {
             }
         });
 		
+		onShapeSelected(d.getList());
    		if (estSelectionne) {
    			couleur.setOnAction(new EventHandler<ActionEvent>() {
    				@Override
    				public void handle(ActionEvent event) {
-   					rect.setFill(couleur.getValue());
+   						selectPar.setFill(couleur.getValue());
    				}
    			});
+   			delete.setOnAction(new EventHandler<ActionEvent>() {
+   				@Override
+   				public void handle(ActionEvent evet) {
+   					
+   				}
+   			});
+   			clone.setOnAction(new EventHandler<ActionEvent>() {
+   				@Override
+   				public void handle(ActionEvent e) {
+   					if(selectPar instanceof Rectangle) {
+   						double x = ((Rectangle)selectPar).getX();
+   						double y = ((Rectangle)selectPar).getY();
+   						double w = ((Rectangle)selectPar).getWidth();
+   						double h = ((Rectangle)selectPar).getHeight();
+   						Rectangle r = new Rectangle(x, y, w, h);
+   						Color color = (Color) selectPar.getFill();
+   						r.getTransforms().add(new Translate(10, 10));
+   						gc.fillRect(x, y, w, h);
+   						gc.setFill(color);
+   					}
+   				}
+   			});
+   			
    		}
-       //}
 	}
 	public void dessin(RadioButton button, GraphicsContext gc) {
 		if (button == rectangle) {
@@ -94,6 +123,7 @@ public class Controller {
 				rect.setHeight(event.getY() - rect.getY());
 				gc.fillRect(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
 				gc.setFill(couleur.getValue());
+				event.consume();
 			};
 		});
 		canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
@@ -103,8 +133,10 @@ public class Controller {
 				rect.setHeight(event.getY() - rect.getY());
 				gc.fillRect(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
 				gc.setFill(couleur.getValue());
+				event.consume();
 			}
 		});
+		d.addDessin(rect);
 	}
 
 		public void dessineLine(GraphicsContext gc) {
@@ -136,9 +168,39 @@ public class Controller {
 					gc.setFill(couleur.getValue());
 				}
 			});
-	}
-	
-	public void onShapeSelected() {
+			d.addDessin(ligne);
+		}
 		
+	
+	public void onShapeSelected(ArrayList<Shape> d) {
+		for(Shape s : d) {
+			Color initial = (Color)s.getStroke();
+			s.setOnMouseClicked(new EventHandler<MouseEvent>() {
+				@Override
+				public void handle(MouseEvent mouseEvent) {
+					rect.setStroke(Color.AQUA);
+					estSelectionne = true;
+					selectPar = s;
+				}
+			});
+			s.setOnMouseReleased(new EventHandler<MouseEvent>() {
+				@Override
+				public void handle(MouseEvent m) {
+					s.setStroke(initial);
+					estSelectionne = false;
+				}
+			});
+			s.addEventHandler(MouseEvent.MOUSE_DRAGGED, new EventHandler<MouseEvent>() {
+				@Override
+				public void handle(MouseEvent event) {
+					double deplaceX = event.getSceneX();
+					double deplaceY = event.getSceneY();
+					s.getTransforms().add(new Translate(deplaceX, deplaceY));           			
+					}
+			});
+			
+		}
 	}
 }
+
+	
