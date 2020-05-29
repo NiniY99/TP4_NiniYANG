@@ -14,6 +14,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.control.*;
+import javafx.scene.shape.Ellipse;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
@@ -60,11 +61,10 @@ public class Controller {
             public void changed(ObservableValue<? extends Toggle> observable, Toggle oldToggle, Toggle newToggle)
             {
                button = (RadioButton)newToggle.getToggleGroup().getSelectedToggle();
-               dessin(button, gc);
+               dessin(button, gc, d);
             }
         });
-		
-		onShapeSelected(d.getList());
+		dessin(button,gc, d);
    		if (estSelectionne) {
    			couleur.setOnAction(new EventHandler<ActionEvent>() {
    				@Override
@@ -105,11 +105,15 @@ public class Controller {
    			
    		}
 	}
-	public void dessin(RadioButton button, GraphicsContext gc) {
+	public void dessin(RadioButton button, GraphicsContext gc, Dessin d) {
 		if (button == rectangle) {
 			dessineRectangle(gc);
-		}else if(button == rectangle) {
+		}else if(button == line) {
 			dessineLine(gc);
+		}else if (button == SM) {
+			onShapeSelected(d.getList());
+		}else if (button == ecllipse) {
+			dessineEllipse(gc);
 		}
 	}
 	
@@ -127,10 +131,11 @@ public class Controller {
 			@Override
 			public void handle(MouseEvent event) {
 				
-				rect.setWidth(event.getX() - rect.getX());
-				rect.setHeight(event.getY() - rect.getY());
+				rect.setWidth(Math.abs(event.getX() - rect.getX()));
+				rect.setHeight(Math.abs(event.getY() - rect.getY()));
 				gc.fillRect(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
 				gc.setFill(couleur.getValue());
+				gc.strokeRect(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
 				event.consume();
 			};
 		});
@@ -140,6 +145,7 @@ public class Controller {
 				rect.setWidth(event.getX() - rect.getX());
 				rect.setHeight(event.getY() - rect.getY());
 				gc.fillRect(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
+				gc.strokeRect(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
 				gc.setFill(couleur.getValue());
 				event.consume();
 			}
@@ -179,11 +185,46 @@ public class Controller {
 			d.addDessin(ligne);
 		}
 		
+		public void dessineEllipse(GraphicsContext gc) {
+			Ellipse elip = new Ellipse(0, 0, 0, 0);
+			canvas.addEventHandler(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
+				@Override
+				public void handle(MouseEvent event) {
+
+					elip.setCenterX(event.getX());
+					elip.setCenterY(event.getY());
+				};
+			});
+			canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, new EventHandler<MouseEvent>() {
+				@Override
+				public void handle(MouseEvent event) {
+					
+					elip.setRadiusX(Math.abs(event.getX() - elip.getCenterX()));
+					elip.setRadiusY(Math.abs(event.getY() - elip.getCenterY()));
+					gc.fillOval(elip.getCenterX(), elip.getCenterY(), elip.getRadiusX(), elip.getRadiusY());
+					gc.setFill(couleur.getValue());
+					gc.strokeOval(elip.getCenterX(), elip.getCenterY(), elip.getRadiusX(), elip.getRadiusY());
+					event.consume();
+				};
+			});
+			canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+				@Override
+				public void handle(MouseEvent event) {
+					elip.setRadiusX(Math.abs(event.getX() - elip.getCenterX()));
+					elip.setRadiusY(Math.abs(event.getY() - elip.getCenterY()));
+					gc.fillOval(elip.getCenterX(), elip.getCenterY(), elip.getRadiusX(), elip.getRadiusY());
+					gc.setFill(couleur.getValue());
+					gc.strokeOval(elip.getCenterX(), elip.getCenterY(), elip.getRadiusX(), elip.getRadiusY());
+					event.consume();
+				}
+			});
+			d.addDessin(elip);
+		}
 	
 	public void onShapeSelected(ArrayList<Shape> d) {
 		for(Shape s : d) {
 			Color initial = (Color)s.getStroke();
-			s.setOnMouseClicked(new EventHandler<MouseEvent>() {
+			s.setOnMouseEntered(new EventHandler<MouseEvent>() {
 				@Override
 				public void handle(MouseEvent mouseEvent) {
 					rect.setStroke(Color.AQUA);
